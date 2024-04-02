@@ -48,7 +48,7 @@ with pip: `pip install .`
 
 3. Run the tool. Give it the database endpoint and directory where the IAM data is stored as arguments:
     ```
-    iamgraph run --db-uri bolt://localhost:7687 run --input-dir ./input/
+    iamgraph --db-uri bolt://localhost:7687 run --input-dir ./input/
     ```
     The individual stages (model and analyse) can also be run separaterly. See `iamgraph help` for details.
 
