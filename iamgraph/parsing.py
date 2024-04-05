@@ -6,9 +6,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def parse_gaad(authorization_details, prod_accounts=[]):
-    roles, account_details = parse_roles(authorization_details['RoleDetailList'], prod_accounts)
-    users = parse_users(authorization_details['UserDetailList'])
+def parse_gaad(authorization_details):
+    roles, account_details = parse_roles(authorization_details.get('RoleDetailList', []))
+    users = parse_users(authorization_details.get('UserDetailList', []))
     return {
         'AccountDetails': account_details,
         'Roles': roles,
@@ -18,31 +18,30 @@ def parse_gaad(authorization_details, prod_accounts=[]):
 
 def parse_users(users):
     for user in users:
-        user['AccountId'] = user['Arn'].split(':')[4]
-        user['UserPolicyList'] = json.dumps(user.get('UserPolicyList', ''), indent=4)
-        user['AttachedManagedPolicies'] = json.dumps(user.get('AttachedManagedPolicies', ''), indent=4)
-        user['GroupList'] = json.dumps(user.get('GroupList', ''), indent=4)
+        user['AccountId'] = user.get('Arn').split(':')[4]
+        user['UserPolicyList'] = json.dumps(user.get('UserPolicyList', []), indent=4)
+        user['AttachedManagedPolicies'] = json.dumps(user.get('AttachedManagedPolicies', []), indent=4)
+        user['GroupList'] = json.dumps(user.get('GroupList', []), indent=4)
         user['Tags'] = json.dumps(user.get('Tags', []), indent=4)
     return users
 
 
-def parse_roles(roles, prod_accounts):
+def parse_roles(roles):
     for role in roles:
-        trust_policy = role['AssumeRolePolicyDocument']
-        account_id = role['Arn'].split(':')[4]
+        trust_policy = role.get('AssumeRolePolicyDocument')
+        account_id = role.get('Arn').split(':')[4]
         role['AccountId'] = account_id
         role['ParsedTrustStatements'] = parse_trust_policy_document(trust_policy)
         role['RawTrustPolicy'] = json.dumps(trust_policy, indent=4)
-        role['ManagedPolicies'] = json.dumps(role['AttachedManagedPolicies'], indent=4)
-        role['InlinePolicies'] = json.dumps(role['RolePolicyList'], indent=4)
+        role['ManagedPolicies'] = json.dumps(role.get('AttachedManagedPolicies', []), indent=4)
+        role['InlinePolicies'] = json.dumps(role.get('RolePolicyList', []), indent=4)
         role['Tags'] = json.dumps(role.get('Tags', []), indent=4)
-        role['LastUsed'] = json.dumps(role['RoleLastUsed'], indent=4)
-        role['IsInstanceProfile'] = bool(role['InstanceProfileList'])
+        role['LastUsed'] = json.dumps(role.get('RoleLastUsed', {}), indent=4)
+        role['IsInstanceProfile'] = bool(role.get('InstanceProfileList', []))
 
     account_details = {
         'AccountId': account_id,
-        'AccountArn': f'arn:aws:iam::{account_id}:root',
-        'Prod': account_id in prod_accounts
+        'AccountArn': f'arn:aws:iam::{account_id}:root'
     }
     return roles, account_details
 
