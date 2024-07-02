@@ -39,10 +39,10 @@ def analyse_assume_role_permissions(row, aid_gaad_map):
         model.load_gaad(aid_gaad_map[int(role_account_id)])
         if role_account_id != trusted_account_id:
             model.load_gaad(aid_gaad_map[int(trusted_account_id)])
-    except:
+    except Exception as e:
         logger.error(
             f'IAMSpy failed to load GAADs of {role_account_id} and/or {trusted_account_id}. '
-             'This is likely an issue with the input data. Skipping these accounts!'
+            f'This is likely an issue with the input data. IAMSpy exception: {repr(e)} Skipping these accounts!!'
         )
         return []
 
